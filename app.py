@@ -51,10 +51,32 @@ def precipitation():
     session = Session(engine)
 
     # Query all results to dictionary using date as key and prcp as value
-    prec_query = session.query(Measurement.date, Measurement.prcp).all()
+    prec_query = session.query(Measurement.date, Measurement.prcp).order_by(Measurement.date).all()
 
 
     session.close()
+
+    # put dict here use {}
+    total_prcp = []
+    for date, prcp in prec_query:
+        prcp_dict = {}
+        prcp_dict["date"] = date
+        prcp_dict["prcp"] = prcp
+        total_prcp.append(prcp_dict)
+
+    return jsonify (total_prcp)
+
+@app.route("/api/v1.0/stations")
+def stations():
+    session = Session(engine)
+
+    station_query = session.query(Station.station, Station.name).all()
+
+    session.close()
+    station_list = list(np.ravel(station_query))
+
+    return jsonify(station_list) 
+
 
 
 
