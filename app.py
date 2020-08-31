@@ -4,6 +4,8 @@ import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
+import datetime as dt
+
 
 from flask import Flask, jsonify
 
@@ -27,7 +29,9 @@ Station = Base.classes.station
 app = Flask(__name__)
 
 
-
+#################################################
+# Flask Routes
+#################################################
 # use &lt; and &gt; as place holders for < > 
 @app.route("/")
 def welcome():
@@ -41,6 +45,16 @@ def welcome():
         f"<a href='/api/v1.0/&lt;start&gt;/&lt;end&gt;>End Date</a><br/>"
     )
 
+@app.route("/api/v1.0/precipitation")
+def precipitation():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    # Query all results to dictionary using date as key and prcp as value
+    prec_query = session.query(Measurement.date, Measurement.prcp).all()
+
+
+    session.close()
 
 
 
