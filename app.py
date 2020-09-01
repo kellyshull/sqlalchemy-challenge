@@ -41,8 +41,8 @@ def welcome():
         f"<a href='/api/v1.0/precipitation'>Precipitation</a><br/>"
         f"<a href='/api/v1.0/stations'>Stations</a><br/>"
         f"<a href='/api/v1.0/tobs'>Temperature</a><br/>"
-        f"<a href='/api/v1.0/&lt;start&gt;'>Start Date</a><br/>"
-        f"<a href='/api/v1.0/&lt;start&gt;/&lt;end&gt;'>End Date</a><br/>"
+        f"<a href='/api/v1.0/start'>Start Date</a><br/>"
+        f"<a href='/api/v1.0/start/end'>End Date</a><br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -100,32 +100,47 @@ def tobs():
     
     return jsonify(top_station)
 
-@app.route("/api/v1.0/start/&lt;start&gt;")
+@app.route("/api/v1.0/start")
 def start():
     session = Session(engine)
 
     query_date = dt.date(2017, 8, 23) - dt.timedelta(days=365)
 
-    sel = [func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)]
-    start_query = session.query(*sel).filter(Measurement.date >= query_date).all()
+    
+    start_query = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= query_date).all()
 
     session.close() 
 
+    start_list = list(np.ravel(start_query))
+
+
     # start_list = [] ...do not use
-    start_dict = {}
-    for mini, avg, maxim in start_query:
-        start_dict["min"] = mini
-        start_dict["avg"] = avg
-        start_dict["max"] = maxim 
+    # start_dict = {}
+    # for min, avg, maxim in start_query:
+    #     start_dict["min"] = min
+    #     start_dict["avg"] = avg
+    #     start_dict["max"] = max
     
-    return jsonify(start_dict) 
+    return jsonify(start_list) 
+
+@app.route("/api/v1.0/start/end")
+def end():
+    session = Session(engine)
+
+    start_date = dt.date(2016, 8, 23)
+    end_date = dt.date(2016, 8, 28)
 
 
-     
+    end_query = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start_date).filter(Measurement.date <= end_date).all()
 
 
+    session.close() 
+
+    end_list = list(np.ravel(end_query))
+
+    return jsonify(end_list)
 
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
