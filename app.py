@@ -42,7 +42,7 @@ def welcome():
         f"<a href='/api/v1.0/stations'>Stations</a><br/>"
         f"<a href='/api/v1.0/tobs'>Temperature</a><br/>"
         f"<a href='/api/v1.0/&lt;start&gt;'>Start Date</a><br/>"
-        f"<a href='/api/v1.0/&lt;start&gt;/&lt;end&gt;>End Date</a><br/>"
+        f"<a href='/api/v1.0/&lt;start&gt;/&lt;end&gt;'>End Date</a><br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -77,9 +77,55 @@ def stations():
 
     return jsonify(station_list) 
 
+@app.route("/api/v1.0/tobs")
+def tobs():
+
+    session = Session(engine)
+
+    # query the dates and temps of the most active station for the last year of data (copy paste from workbook)
+    query_date = dt.date(2017, 8, 23) - dt.timedelta(days=365)
+    
+    top_station_query = session.query(Measurement.date, Measurement.tobs).\
+            filter(Measurement.date >= query_date).\
+            filter(Measurement.station == 'USC00519281').all()
+    
+    session.close()
+
+    top_station = []
+    for date, tobs in top_station_query:
+        top_dict = {}
+        top_dict["date"] = date
+        top_dict["tobs"] = tobs
+        top_station.append(top_dict)
+    
+    return jsonify(top_station)
+
+@app.route("/api/v1.0/start/&lt;start&gt;")
+def start():
+    session = Session(engine)
+
+    query_date = dt.date(2017, 8, 23) - dt.timedelta(days=365)
+
+    sel = [func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)]
+    start_query = session.query(*sel).filter(Measurement.date >= query_date).all()
+
+    session.close() 
+
+    # start_list = [] ...do not use
+    start_dict = {}
+    for mini, avg, maxim in start_query:
+        start_dict["min"] = mini
+        start_dict["avg"] = avg
+        start_dict["max"] = maxim 
+    
+    return jsonify(start_dict) 
+
+
+     
+
 
 
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
